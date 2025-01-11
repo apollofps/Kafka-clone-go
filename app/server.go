@@ -20,10 +20,20 @@ func main() {
 			continue
 		}
 		defer conn.Close()
-		var correlationID int32 = 7
+
+		//read request message
+		request := make([]byte,1024)
+		_,err = conn.Read(request)
+		if err != nil {
+			fmt.Println("Error reading request:", err)
+			continue
+		}
+
+		correlationID := binary.BigEndian.Uint32(request[8:12])
+
 		response := make([]byte, 8) // Allocate 8 bytes for message_size and correlation_id
 		binary.BigEndian.PutUint32(response[0:4], 4) // message_size is 4 bytes
-		binary.BigEndian.PutUint32(response[4:8], uint32(correlationID)) // correlation_id
+		binary.BigEndian.PutUint32(response[4:8], correlationID) // correlation_id
 		_, err = conn.Write(response)
 		if err != nil {
 			fmt.Println("Error writing response:", err)
